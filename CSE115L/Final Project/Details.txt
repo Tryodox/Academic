@@ -1,0 +1,51 @@
+Project Background and Context:
+
+
+With rising cyber threats, weak passwords are a major vulnerability. Many users reuse 
+compromised or simple passwords. This project addresses this issue by creating a tool
+that analyzes password strength, checks for breached passwords, and generates secure 
+ones. 
+ 
+
+Project Objectives and Scope: 
+Objectives: 
+
+•	Analyze passwords for strength and breaches 
+•	Generate secure passwords 
+•	Maintain activity logs for both actions 
+
+Scope: 
+
+•	Command-line C application 
+•	Reads from breached password file 
+•	Stores analysis and generation history with timestamps 
+•	Designed for general users and basic cyber awareness 
+  
+ 
+ 
+Technical Approach and Solution 
+
+Key concepts: 
+•	Password Analysis: 
+
+o	Checks password length, character variety (uppercase, lowercase, digits, symbols) 
+o	Calculates entropy to estimate crack time o Compares against a breach list loaded 
+from a file 
+
+•	Password Generation: 
+
+o	Generates secure passwords using a randomized character set 
+o	User defines desired length 
+
+•	Logging & File I/O: 
+
+o	Stores history of password generations and analysis in separate .txt files with date 
+and time 
+o	Breached passwords are read from an external file into an array 
+
+
+Concepts Used: 
+
+•	Conditional Statements, Loops, Functions 
+•	Arrays, Strings, Structures 
+•	File I/O for reading/writing data 
