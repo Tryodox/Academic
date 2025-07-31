@@ -11,7 +11,7 @@ char *breach_list[MAX_BREACHED];
 int breach_list_size = 0;
 
 void load_breach_list() {
-    FILE *file = fopen("breached.txt", "r");
+    FILE *file = fopen("breached_passwords.txt", "r");
     if (!file) {
         printf("Warning: Could not open breached.txt\n");
         return;
