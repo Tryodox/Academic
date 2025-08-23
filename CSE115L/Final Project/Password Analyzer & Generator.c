@@ -10,10 +10,18 @@
 char *breach_list[MAX_BREACHED];
 int breach_list_size = 0;
 
+typedef struct{
+    int len;
+    int has_upper;
+    int has_lower;
+    int has_digit;
+    int has_symbol;
+}variables;
+
 void load_breach_list() {
     FILE *file = fopen("breached_passwords.txt", "r");
     if (!file) {
-        printf("Warning: Could not open breached.txt\n");
+        printf("Warning: Could not open breached_passwords.txt\n");
         return;
     }
 
@@ -27,7 +35,7 @@ void load_breach_list() {
     fclose(file);
 }
 
-int is_in_breach_list(char pass[]) {
+int is_in_breach_list(char *pass) {
     for (int i = 0; i < breach_list_size; i++) {
         if (strcmp(pass, breach_list[i]) == 0)
             return 1;
@@ -87,36 +95,39 @@ void history_menu() {
 }
 
 void pass_analyzer() {
-    char pass[100], report[1000] = "";
-    int len, has_upper = 0, has_lower = 0, has_digit = 0, has_symbol = 0;
+    char *pass = (char*) malloc(100*sizeof(char)); 
+    char report[1000] = "";
+
+    variables var = {0, 0, 0, 0, 0};
+
     int i, pool = 0;
 
     getchar();
     printf("Enter your password: ");
-    fgets(pass, sizeof(pass), stdin);
+    fgets(pass, 100, stdin);
     pass[strcspn(pass, "\n")] = '\0';
 
-    len = strlen(pass);
-    for (i = 0; i < len; i++) {
-        if (isupper(pass[i])) has_upper = 1;
-        else if (islower(pass[i])) has_lower = 1;
-        else if (isdigit(pass[i])) has_digit = 1;
-        else has_symbol = 1;
+    var.len = strlen(pass);
+    for (i = 0; i < var.len; i++) {
+        if (isupper(*(pass+i))) var.has_upper = 1;
+        else if (islower(*(pass+i))) var.has_lower = 1;
+        else if (isdigit(*(pass+i))) var.has_digit = 1;
+        else var.has_symbol = 1;
     }
 
-    if (has_upper) pool += 26;
-    if (has_lower) pool += 26;
-    if (has_digit) pool += 10;
-    if (has_symbol) pool += 32;
+    if (var.has_upper) pool += 26;
+    if (var.has_lower) pool += 26;
+    if (var.has_digit) pool += 10;
+    if (var.has_symbol) pool += 32;
 
-    double entropy = len * log2(pool);
+    double entropy = var.len * log2(pool);
     double crack_seconds = pow(2, entropy) / 1e9;
 
-    sprintf(report + strlen(report), "Length: %d\nIncludes: ", len);
-    if (has_upper) strcat(report, "Uppercase ");
-    if (has_lower) strcat(report, "Lowercase ");
-    if (has_digit) strcat(report, "Digit ");
-    if (has_symbol) strcat(report, "Symbol ");
+    sprintf(report + strlen(report), "Length: %d\nIncludes: ", var.len);
+    if (var.has_upper) strcat(report, "Uppercase ");
+    if (var.has_lower) strcat(report, "Lowercase ");
+    if (var.has_digit) strcat(report, "Digit ");
+    if (var.has_symbol) strcat(report, "Symbol ");
     strcat(report, "\n");
 
     char crack_info[100];
@@ -140,7 +151,7 @@ void pass_analyzer() {
     else strcat(report, "\x1b[32mStrong\x1b[0m\n");
 
     if (is_in_breach_list(pass))
-        strcat(report, "This password appears in a known data breach!\n");
+        strcat(report, "\x1b[31mThis password appears in a known data breach!\x1b[0m\n");
     else
         strcat(report, "Doesn't match any breach data.\n");
 
@@ -149,32 +160,52 @@ void pass_analyzer() {
     printf("__________________________________________________\n");
 
     save_analysis_history(report);
+
+    free(pass);
 }
 
 void pass_generator() {
     int length;
-    char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    char lowercase[] = "abcdefghijklmnopqrstuvwxyz";
+    char uppercase[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char digits[] = "0123456789";
+    char symbols[] = "!@#$%^&*";
+    char all[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     char password[100];
 
     srand(time(NULL));
-    printf("Enter desired password length: ");
+    printf("Enter desired password length (minimum 10): ");
     scanf("%d", &length);
 
-    if (length > 99 || length <= 0) {
+    if (length > 99 || length < 10) {
         printf("Invalid length!\n");
         return;
     }
 
-    for (int i = 0; i < length; i++) {
-        password[i] = charset[rand() % (sizeof(charset) - 1)];
+    password[0] = lowercase[rand() % (sizeof(lowercase) - 1)];
+    password[1] = uppercase[rand() % (sizeof(uppercase) - 1)];
+    password[2] = digits[rand() % (sizeof(digits) - 1)];
+    password[3] = symbols[rand() % (sizeof(symbols) - 1)];
+
+    for (int i = 4; i < length; i++) {
+        password[i] = all[rand() % (sizeof(all) - 1)];
     }
+
     password[length] = '\0';
 
-    printf("Generated Password: %s\n", password);
+    for (int i = 0; i < length; i++) {
+        int j = rand() % length;
+        char temp = password[i];
+        password[i] = password[j];
+        password[j] = temp;
+    }
+
+    printf("Generated Strong Password: %s\n", password);
     printf("__________________________________________________\n");
 
     save_generation_history(password);
 }
+
 
 void menu() {
     int choice;
